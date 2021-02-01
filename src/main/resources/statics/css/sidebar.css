@@ -1,0 +1,53 @@
+.sidebar {
+  width: 225px; height: 100vh; position: fixed; top: 0; left: 0; z-index: 999;
+  background: #333; color: #fff; transition: all .3s;
+  text-align: left;
+  font-family: 'Roboto', sans-serif; font-size: 16px; font-weight: 300; line-height: 30px
+}
+
+.sidebar a:hover {
+  text-decoration: none;
+}
+
+.dismiss {
+  width: 35px; height: 35px; position: absolute; top: 10px; right: 10px; transition: all .3s;
+  background: #444; border-radius: 4px; text-align: center; line-height: 35px; cursor: pointer;
+}
+
+.dismiss:hover, .dismiss:focus { background: #666; color: #fff; }
+
+.sidebar ul.menu-elements { padding: 10px 0; border-bottom: 1px solid #444; transition: all .2s; }
+
+.sidebar ul li a {
+  display: block; padding: 10px 20px;
+  border: 0; color: #fff;
+}
+.sidebar ul li a:hover,
+.sidebar ul li a:focus,
+.sidebar ul li.active > a:hover,
+.sidebar ul li.active > a:focus { outline: 0; background: #555; color: #fff }
+
+.sidebar ul li a i { margin-right: 5px; }
+
+.sidebar ul li.active > a, a[aria-expanded="true"] { background: #444; color: #fff; }
+
+.sidebar ul ul a { background: #444; padding-left: 40px; font-size: 14px; }
+.sidebar ul ul ul a { background: #444; padding-left: 60px; font-size: 14px; }
+
+.sidebar ul ul li.active > a { background: #555; }
+
+.sidebar a[data-toggle="collapse"] {
+  position: relative;
+}
+
+.sidebar .dropdown-toggle::after {
+  display: block;
+  position: absolute;
+  top: 50%;
+  right: 20px;
+  transform: translateY(-50%);
+}
+
+.no-transition {
+  transition: none !important;
+}

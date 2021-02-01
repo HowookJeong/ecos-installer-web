@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorator="layout/defaultLayout">
+
+<th:block layout:fragment="html_head">
+  <style>
+.btn-console {
+    width: 350px !important;
+}
+</style>
+</th:block>
+
+<th:block layout:fragment="bodyFragment">
+  <body class="sb-nav-fixed">
+  <th:block th:replace="fragments/commons :: navBarFragment"></th:block>
+  <div id="layoutSidenav">
+    <th:block th:replace="fragments/commons :: sideNavFragment"></th:block>
+    <div id="layoutSidenav_content">
+      <main>
+        <div class="container-fluid">
+          <nav>
+            <div class="nav nav-tabs nav-pills" id="nav-tab" role="tablist">
+              <a class="nav-item nav-link active" id="nav-terraform-configuration" data-toggle="tab" href="#terraform-configuration" role="tab" aria-controls="terraform-configuration" aria-selected="true">Step 1 - Terraform</a>
+              <a class="nav-item nav-link" id="nav-kibana-installation" data-toggle="tab" href="#kibana-installation" role="tab" aria-controls="kibana-installation" aria-selected="false">Step 2 - Kibana</a>
+              <a class="nav-item nav-link" id="nav-kibana-run" data-toggle="tab" href="#kibana-run" role="tab" aria-controls="kibana-run" aria-selected="false">Step 3 - Run</a>
+              <a class="nav-item nav-link" id="nav-log-viewer" data-toggle="tab" href="#log-viewer" role="tab" aria-controls="log-viewer" aria-selected="false">Console Log Viewer</a>
+            </div>
+          </nav>
+
+          <div class="tab-content" id="nav-tabContent">
+            <div class="tab-pane fade show active" id="terraform-configuration" role="tabpanel" aria-labelledby="nav-terraform-configuration">
+              <form name="terraformForm">
+              <div class="card">
+                <div class="card-body">
+                    <div class="row">
+                      <div class="col-sm-12">
+                        <div id="awsInfra">
+                          <table class="table table-sm table-striped table-dark">
+                            <tr>
+                              <td>Cluster Backend Bucket</td>
+                              <td>
+                                <input type="text" class="form-control form-control-sm" id="clusterBackendBucket" name="clusterBackendBucket" value="megatoi-terraform-state">
+                              </td>
+                              <td>Cluster Backend Key</td>
+                              <td>
+                                <select class="form-control form-control-sm" id="clusterBackendKey" name="clusterBackendKey">
+                                </select>
+                              </td>
+                              <td>
+                                <a href="javascript:;" class="btn-sm btn-primary" role="button" onclick="listTerraformStateFile();">Load Cluster Backend</a>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>Vendor</td>
+                              <td>
+                                <select class="form-control form-control-sm" id="vendor" name="vendor">
+                                  <option value="aws">AWS</option>
+                                  <option value="azure">MS Azure</option>
+                                  <option value="gcp">GCP</option>
+                                </select>
+                              </td>
+                              <td>Instance Types</td>
+                              <td>
+                                <select class="form-control form-control-sm" id="instanceType" name="instanceType">
+                                </select>
+                              </td>
+                            </tr>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                </div>
+              </div>
+
+              <div class="card">
+                <div class="card-body">
+                  <a href="javascript:;" class="btn-sm btn-primary" role="button" onclick="registerTerraform(); createInstance();">Create Instance</a>
+                  <a href="javascript:;" class="btn-sm btn-primary" role="button" onclick="destroyInstance();">Destroy Instance</a>
+                  <a href="javascript:;" class="btn-sm btn-secondary" role="button" onclick="resetTemplateMode();">재설정</a>
+                </div>
+              </div>
+
+              <div class="card">
+                <div class="card-body">
+                  <div class="row">
+                    <div class="col-sm-12">
+                      <table class="table table-sm table-striped table-dark">
+                        <tr>
+                          <td>VPC Security Group IDs</td>
+                          <td>
+                            <input type="text" class="form-control form-control-sm" id="vpcSecurityGroupIds" name="vpcSecurityGroupIds" th:value="${config.terraformAwsSecurityGroup}">
+                          </td>
+                          <td>Subnet</td>
+                          <td>
+                            <input type="text" class="form-control form-control-sm" id="subnetId" name="subnetId" th:value="${config.terraformAwsSubnet}">
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>Available Zone</td>
+                          <td>
+                            <input type="text" class="form-control form-control-sm" id="zoneId" name="zoneId" th:value="${config.terraformAwsAz}">
+                          </td>
+                          <td>Key Name</td>
+                          <td>
+                            <input type="text" class="form-control form-control-sm" id="keyName" name="keyName" th:value="${config.terraformAwsKeyName}">
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>AMI ID</td>
+                          <td>
+                            <input type="text" class="form-control form-control-sm" id="amiId" name="amiId" th:value="${config.terraformAwsAmi}">
+                          </td>
+                          <td>Pem File</td>
+                          <td>
+                            <input type="text" class="form-control form-control-sm" id="keyPem" name="keyPem" th:value="${config.terraformAwsPemFile}">
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>Environment</td>
+                          <td>
+                            <input type="text" class="form-control form-control-sm" id="env" name="env" value="dev">
+                          </td>
+                          <td>Terraform File Path</td>
+                          <td>
+                            <input type="text" class="form-control form-control-sm" id="tfPath" name="tfPath" th:value="${config.terraformAwsPathKibana}">
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>
+                            <div class="form-check">
+                              <input type="checkbox" class="form-check-input" id="isTerraformBackend" name="isTerraformBackend" checked>
+                              <label class="form-check-label" for="isTerraformBackend">Backend Bucket</label>
+                            </div>
+                          </td>
+                          <td>
+                            <input type="text" class="form-control form-control-sm" id="terraformBackendBucket" name="terraformBackendBucket" th:value="${config.terraformAwsBackendBucket}" readonly>
+                          </td>
+                          <td>Backend Key</td>
+                          <td>
+                            <input type="text" class="form-control form-control-sm" id="terraformBackendKey" name="terraformBackendKey" th:value="${config.terraformAwsBackendKeyKibana}" placeholder="key/file">
+                          </td>
+                        </tr>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </form>
+            </div>
+
+            <div class="tab-pane fade" id="kibana-installation" role="tabpanel" aria-labelledby="nav-kibana-installation">
+              <form name="kibanaForm">
+              <div class="card">
+                <div class="card-body">
+                  <div class="row">
+                    <table class="table table-sm table-striped table-dark">
+                      <tr>
+                        <td>Kibana Version</td>
+                        <td>
+                          <select class="form-control form-control-sm" id="kibanaVersion" name="kibanaVersion">
+                            <option value="7.10.2">7.10.2</option>
+                            <option value="7.10.0">7.10.0</option>
+                            <option value="7.9.1">7.9.1</option>
+                            <option value="7.8.1">7.8.1</option>
+                            <option value="7.8">7.8</option>
+                          </select>
+                        </td>
+                        <td>Elasticsearch Hosts</td>
+                        <td>
+                          <input type="text" class="form-control form-control-sm" id="esHosts" name="esHosts" value="">
+                          <small id="esHostsExample" class="form-text text-muted">ex) 10.0.0.1:9200,10.0.0.2:9201</small>
+                        </td>
+                        <td>Bastion Host IP</td>
+                        <td>
+                          <input type="text" class="form-control form-control-sm" id="bastionIp" name="bastionIp" th:value="${config.terraformAwsBastionIp}">
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>Kibana IP</td>
+                        <td>
+                          <input type="text" class="form-control form-control-sm" id="kibanaIp" name="kibanaIp" value="">
+                        </td>
+                        <td>Kibana Port</td>
+                        <td>
+                          <input type="text" class="form-control form-control-sm" id="kibanaPort" name="kibanaPort" value="5601">
+                        </td>
+                        <td>Working Path</td>
+                        <td>
+                          <input type="text" class="form-control form-control-sm" id="workingPath" name="workingPath" th:value="${config.workingPath}">
+                        </td>
+                      </tr>
+                    </table>
+                  </div>
+
+                  <a href="javascript:;" class="btn-sm btn-primary" role="button" onclick="createKibanaCluster();">설치</a>
+                  <hr>
+                </div>
+              </div>
+            </form>
+            </div>
+
+            <div class="tab-pane fade" id="kibana-run" role="tabpanel" aria-labelledby="nav-kibana-run">
+              <div class="card">
+                <div class="card-body">
+                  <a href="javascript:;" class="btn-sm btn-primary" role="button" onclick="startKibanaByAnsible();">Cluster Start</a>
+                  <a href="javascript:;" class="btn-sm btn-primary" role="button" onclick="stopKibanaByAnsible();">Cluster Stop</a>
+                </div>
+              </div>
+            </div>
+
+            <div class="tab-pane fade" id="log-viewer" role="tabpanel" aria-labelledby="nav-log-viewer">
+              <div class="card">
+                <div class="card-body">
+                  <div id="ecosConsoleLog" style="width:100%; height:400px;">
+
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </main>
+      <th:block th:replace="fragments/commons :: footerFragment"></th:block>
+    </div>
+  </div>
+  <th:block th:include="fragments/bottomScript"></th:block>
+  <script src="/statics/js/ace/ace.js"></script>
+  </body>
+<script>
+$(document).ready(function () {
+  drawConsoleLog("ecosConsoleLog");
+  describeInstanceTypes();
+  //listTerraformStateFile();
+});
+
+
+let instanceRequestModel = {
+  terraformRequestModel: {
+    vpcSecurityGroupIds:"",
+    subnetId:"",
+    zoneId:"",
+    keyPem:"",
+    amiId:"ami-0d0bbf63",
+    tfPath:"",
+    env:"dev",
+    backendBucket:"",
+    backendKey:"",
+    isBackend:false
+  },
+  kibanaRequestModel: {
+    clusterBackendBucket:"",
+    clusterBackendKey:"",
+    version:"",
+    vendor:"",
+    port:5601,
+    elasticsearchHosts:"",
+    instanceType:"",
+    instanceSize:1,
+    volumeSize:10,
+  },
+  workingPath:"",
+  bastionIp:"",
+}
+
+function drawConsoleLog(viewer){
+  var beautify = ace.require("ace/ext/beautify");
+  var editor = ace.edit(viewer);
+//  editor.setOptions({ maxLines: Infinity });
+  editor.setOptions({ newLineMode: 'auto' });
+  editor.setTheme("ace/theme/nord_dark");
+  editor.session.setMode("ace/mode/text");
+  editor.setShowInvisibles(false);
+  editor.setReadOnly(true);
+  editor.setShowPrintMargin(false);
+  editor.session.setTabSize(2);
+  editor.session.setUseSoftTabs(true);
+  editor.session.setUseWrapMode(true);
+
+  try {
+    beautify.beautify(editor.session);
+  } catch(e) {
+  }
+
+  editor.resize();
+}
+
+function setConsoleLog(viewer, log) {
+  let editor = ace.edit(viewer);
+
+  try {
+    log = log.replace(/\u001b\[.*?m/ig, '');
+  } catch(e) {
+    console.log(e);
+  }
+
+  editor.setValue(
+    editor.getValue() +
+    "\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n" +
+    "\n+++++++++++++++++++++++++++++++ End of Logs +++++++++++++++++++++++++++++++\n" +
+    "\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n" +
+    log
+  );
+
+  drawConsoleLog(viewer);
+}
+
+function describeInstanceTypes() {
+  $.ajax({
+    url: "/api/aws/ec2/describe-instance-types",
+    type: "POST",
+    dataType: "json",
+    contentType: 'application/json',
+    data: JSON.stringify({
+    }),
+    success: function (res) {
+      describeInstanceTypesShow(res);
+    },
+    error: function (res) {
+      console.log(res);
+    }
+  });
+}
+
+function describeInstanceTypesShow(res) {
+  const fm = document.infrastructureForm;
+  let instances = res.InstanceTypes;
+  let template = "<option value='_INSTANCETYPE_'>_INSTANCETYPE_ (_VCPU_ / _MEM_ GiB)</option>";
+  let item;
+
+  instances.forEach(function (instance) {
+    item = "";
+    item = template.replace(/_INSTANCETYPE_/gi, instance.InstanceType);
+    item = item.replace(/_VCPU_/gi, instance.VCpuInfo.DefaultVCpus);
+    item = item.replace(/_MEM_/gi, instance.MemoryInfo.SizeInMiB/1024);
+
+    if ( instance.MemoryInfo.SizeInMiB/1024 >= 1 ) {
+      $('#instanceType').append(item);
+    }
+  });
+}
+
+function listTerraformStateFile() {
+  const fm = document.terraformForm;
+  let backendBucket = fm.clusterBackendBucket.value;
+
+  $.ajax({
+    url: "/api/aws/terraform/list-terraform-state-file",
+    type: "POST",
+    dataType: "json",
+    contentType: 'application/json',
+    data: JSON.stringify({
+      "backendBucket": backendBucket
+    }),
+    success: function (res) {
+      console.log(res);
+      setClusterList(res);
+      setConsoleLog("ecosConsoleLog", res);
+    },
+    error: function (res) {
+      console.log(res);
+      setConsoleLog("ecosConsoleLog", res);
+    }
+  });
+}
+
+function setClusterList(res) {
+  const fm = document.terraformForm;
+  const size = res.length
+  let backendKey;
+  let options = "";
+
+  for ( let i=0; i<size; i++ ) {
+    backendKey = res[i].key.split("/");
+    if ( backendKey[1] != "kibana" ) {
+      options += "<option value='"+res[i].key+"'>"+res[i].key+"</option>";
+    }
+  }
+
+  $('#clusterBackendKey').html(options);
+}
+
+function registerTerraform() {
+  const fm = document.terraformForm;
+  let clusterName = "";
+
+  instanceRequestModel.kibanaRequestModel.clusterBackendBucket = fm.clusterBackendBucket.value;
+  instanceRequestModel.kibanaRequestModel.clusterBackendKey = fm.clusterBackendKey.value;
+  instanceRequestModel.kibanaRequestModel.vendor = fm.vendor[fm.vendor.selectedIndex].value;
+  instanceRequestModel.kibanaRequestModel.instanceType = fm.instanceType[fm.instanceType.selectedIndex].value;
+
+  clusterName = fm.clusterBackendKey.value.split("/");
+
+  fm.tfPath.value = fm.tfPath.value.replace("_CLUSTERNAME_", clusterName[0]);
+  fm.terraformBackendKey.value = fm.terraformBackendKey.value.replace("_CLUSTERNAME_", clusterName[0]);
+
+  instanceRequestModel.terraformRequestModel.vpcSecurityGroupIds = fm.vpcSecurityGroupIds.value;
+  instanceRequestModel.terraformRequestModel.subnetId = fm.subnetId.value;
+  instanceRequestModel.terraformRequestModel.zoneId = fm.zoneId.value;
+  instanceRequestModel.terraformRequestModel.keyName = fm.keyName.value;
+  instanceRequestModel.terraformRequestModel.keyPem = fm.keyPem.value;
+  instanceRequestModel.terraformRequestModel.amiId = fm.amiId.value;
+  instanceRequestModel.terraformRequestModel.tfPath = fm.tfPath.value;
+  instanceRequestModel.terraformRequestModel.env = fm.env.value;
+  instanceRequestModel.terraformRequestModel.backendBucket = fm.terraformBackendBucket.value;
+  instanceRequestModel.terraformRequestModel.backendKey = fm.terraformBackendKey.value;
+  instanceRequestModel.terraformRequestModel.backend = fm.isTerraformBackend.checked;
+}
+
+function createInstance() {
+  spinner_show();
+
+  $.ajax({
+    url: "/api/aws/terraform/create-instances-for-kibana",
+    type: "POST",
+    dataType: "json",
+    contentType: 'application/json',
+    data: JSON.stringify({
+      "terraformRequestModel": instanceRequestModel.terraformRequestModel,
+      "kibanaRequestModel": instanceRequestModel.kibanaRequestModel,
+    }),
+    success: function (res) {
+      setConsoleLog("ecosConsoleLog", res);
+      spinner_hide();
+      fetchElasticsearchHostsIp();
+      fetchKibanaHostIp();
+      alert("생성 되었습니다.");
+    },
+    error: function (res) {
+      setConsoleLog("ecosConsoleLog", res);
+      spinner_hide();
+      alert("오류가 발생했습니다.");
+    }
+  });
+}
+
+function destroyInstance() {
+  spinner_show();
+
+  $.ajax({
+    url: "/api/aws/terraform/destroy-instances-for-kibana",
+    type: "POST",
+    dataType: "json",
+    contentType: 'application/json',
+    data: JSON.stringify({
+      "terraformRequestModel": instanceRequestModel.terraformRequestModel
+    }),
+    success: function (res) {
+      setConsoleLog("ecosConsoleLog", res);
+      spinner_hide();
+      alert("삭제 되었습니다.");
+    },
+    error: function (res) {
+      setConsoleLog("ecosConsoleLog", res);
+      spinner_hide();
+      alert("오류가 발생했습니다.");
+    }
+  });
+}
+
+function resetTemplateMode() {
+  const fm = document.terraformForm;
+
+  fm.tfPath.value = "/tmp/home/mzc/app/terraform/_CLUSTERNAME_/kibana";
+  fm.terraformBackendKey.value = "_CLUSTERNAME_/kibana/terraform.tfstate";
+}
+
+function fetchElasticsearchHostsIp() {
+  const fm = document.terraformForm;
+  const kbFm = document.kibanaForm;
+  let backendBucket = fm.clusterBackendBucket.value;
+  let backendKey = fm.clusterBackendKey.value;
+  let result = "";
+
+  spinner_show();
+
+  $.ajax({
+    url: "/api/aws/terraform/fetch-terraform-state",
+    type: "POST",
+    dataType: "json",
+    async: false,
+    contentType: 'application/json',
+    data: JSON.stringify({
+      "backendBucket": backendBucket,
+      "backendKey": backendKey,
+    }),
+    success: function (res) {
+      setConsoleLog("ecosConsoleLog", res);
+      spinner_hide();
+      kbFm.esHosts.value = extractClusterIps(res);
+      console.log(res);
+    },
+    error: function (res) {
+      setConsoleLog("ecosConsoleLog", res);
+      spinner_hide();
+      console.log(res);
+      alert("오류가 발생했습니다.");
+    }
+  });
+}
+
+function fetchKibanaHostIp() {
+  const fm = document.terraformForm;
+  const kbFm = document.kibanaForm;
+  let backendBucket = fm.terraformBackendBucket.value;
+  let backendKey = fm.terraformBackendKey.value;
+
+  spinner_show();
+
+  $.ajax({
+    url: "/api/aws/terraform/fetch-terraform-state",
+    type: "POST",
+    dataType: "json",
+    async: false,
+    contentType: 'application/json',
+    data: JSON.stringify({
+      "backendBucket": backendBucket,
+      "backendKey": backendKey,
+    }),
+    success: function (res) {
+      setConsoleLog("ecosConsoleLog", res);
+      spinner_hide();
+      try {
+        res = JSON.parse(res);
+        kbFm.kibanaIp.value = extractInstancePrivateIp(res.outputs.kibana_private_ip.value);
+      } catch (e) {
+        alert("오류가 발생했습니다.");
+        setConsoleLog("ecosConsoleLog", e);
+        console.log(e);
+      }
+
+      console.log(res);
+    },
+    error: function (res) {
+      setConsoleLog("ecosConsoleLog", res);
+      spinner_hide();
+      console.log(res);
+      alert("오류가 발생했습니다.");
+    }
+  });
+}
+
+function extractClusterIps(res) {
+  const fm = document.elasticsearchForm;
+  let ip = "";
+  let ips = "";
+
+  try {
+    res = JSON.parse(res);
+
+    if ( res.outputs.allinone_private_ip === undefined ) {
+      throw new Error("Node Topology Undefined!!");
+    }
+
+    ips = extractInstancePrivateIp(res.outputs.allinone_private_ip.value);
+
+    if ( ips == "" ) {
+      ips = extractInstancePrivateIp(res.outputs.data_private_ip.value);
+    } else {
+      ip = extractInstancePrivateIp(res.outputs.data_private_ip.value);
+
+      if ( ip != "" ) {
+        ips += "," + ip;
+      }
+    }
+
+    if ( ips == "" ) {
+      ips = extractInstancePrivateIp(res.outputs.coordinator_private_ip.value);
+    } else {
+      ip = extractInstancePrivateIp(res.outputs.coordinator_private_ip.value);
+
+      if ( ip != "" ) {
+        ips += "," + ip;
+      }
+
+    }
+  } catch (e) {
+    setConsoleLog("ecosConsoleLog", e);
+    console.log(e);
+  }
+
+  return ips;
+}
+
+function extractInstancePrivateIp(ips) {
+  let tempIps = "";
+
+  for (let i=0; i<ips.length; i++ ) {
+    tempIps += ips[i] + ",";
+  }
+
+  return tempIps.substring(0, tempIps.length - 1);
+}
+
+function createKibanaCluster() {
+  const fm = document.kibanaForm;
+  const tfFm = document.terraformForm;
+
+  instanceRequestModel.kibanaRequestModel.version = fm.kibanaVersion[fm.kibanaVersion.selectedIndex].value;
+  instanceRequestModel.kibanaRequestModel.elasticsearchHosts = makeElasticsearchHosts(fm.esHosts.value);
+  instanceRequestModel.kibanaRequestModel.ip = fm.kibanaIp.value;
+  instanceRequestModel.kibanaRequestModel.port = fm.kibanaPort.value;
+  instanceRequestModel.workingPath = fm.workingPath.value;
+  instanceRequestModel.bastionIp = fm.bastionIp.value;
+
+  spinner_show();
+
+  $.ajax({
+    url: "/api/aws/kibana/create-by-ansible",
+    type: "POST",
+    dataType: "json",
+    contentType: 'application/json',
+    data: JSON.stringify({
+      "terraformRequestModel": instanceRequestModel.terraformRequestModel,
+      "kibanaRequestModel": instanceRequestModel.kibanaRequestModel,
+      "workingPath": instanceRequestModel.workingPath,
+      "bastionIp": instanceRequestModel.bastionIp,
+    }),
+    success: function (res) {
+      setConsoleLog("ecosConsoleLog", res);
+      console.log(res);
+      spinner_hide();
+      alert("생성 되었습니다.");
+    },
+    error: function (res) {
+      setConsoleLog("ecosConsoleLog", res);
+      console.log(res);
+      spinner_hide();
+      alert("오류가 발생했습니다.");
+    }
+  });
+}
+
+function makeElasticsearchHosts(esHost) {
+  let hosts = esHost.split(",");
+  let size = hosts.length;
+  let tempHosts = "";
+
+  for (let i=0; i<size; i++ ) {
+    tempHosts += "\"http://"+hosts[i]+"\"" + ",";
+  }
+
+  return "'[" + tempHosts.substring(0, tempHosts.length - 1) + "]'";
+}
+
+function startKibanaByAnsible() {
+  spinner_show();
+
+  $.ajax({
+    url: "/api/aws/kibana/start-by-ansible",
+    type: "POST",
+    dataType: "json",
+    contentType: 'application/json',
+    data: JSON.stringify({
+      "terraformRequestModel": instanceRequestModel.terraformRequestModel,
+      "kibanaRequestModel": instanceRequestModel.kibanaRequestModel,
+      "workingPath": instanceRequestModel.workingPath,
+      "bastionIp": instanceRequestModel.bastionIp,
+    }),
+    success: function (res) {
+      setConsoleLog("ecosConsoleLog", res);
+      console.log(res);
+      spinner_hide();
+      alert("시작 되었습니다.");
+    },
+    error: function (res) {
+      setConsoleLog("ecosConsoleLog", res);
+      console.log(res);
+      spinner_hide();
+      alert("오류가 발생했습니다.");
+    }
+  });
+}
+
+function stopKibanaByAnsible() {
+  spinner_show();
+
+  $.ajax({
+    url: "/api/aws/kibana/stop-by-ansible",
+    type: "POST",
+    dataType: "json",
+    contentType: 'application/json',
+    data: JSON.stringify({
+      "terraformRequestModel": instanceRequestModel.terraformRequestModel,
+      "kibanaRequestModel": instanceRequestModel.kibanaRequestModel,
+      "workingPath": instanceRequestModel.workingPath,
+      "bastionIp": instanceRequestModel.bastionIp,
+    }),
+    success: function (res) {
+      setConsoleLog("ecosConsoleLog", res);
+      console.log(res);
+      spinner_hide();
+      alert("중지 되었습니다.");
+    },
+    error: function (res) {
+      setConsoleLog("ecosConsoleLog", res);
+      console.log(res);
+      spinner_hide();
+      alert("오류가 발생했습니다.");
+    }
+  });
+}
+</script>
+</th:block>
+</html>

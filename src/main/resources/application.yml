@@ -1,0 +1,218 @@
+##profile
+spring:
+  mvc:
+    static-path-pattern: /statics/**
+  resources:
+    chain:
+      html-application-cache: true
+      enabled: true
+      strategy:
+        content:
+          enabled: true
+          paths: /**
+    static-locations: classpath:/statics/
+    add-mappings: true
+  main:
+    allow-bean-definition-overriding: true
+  thymeleaf:
+    cache: false
+#  security:
+#    user:
+#      name: admin
+#      password: admin
+# server
+
+server:
+  servlet:
+    session:
+      timeout: 0
+  error:
+    path: "/error"
+  redirect-https: ${https:true}
+  port: 8080
+  https:
+    port: 443
+  tomcat:
+    protocol_header: x-forwarded-proto
+    remote_ip_header: x-forwarded-for
+    accesslog:
+      enabled: true
+      pattern: '{"userId": "%{userId}o", "userName": "%{userName}o", "time": "%{yyyy-MM-dd''T''HH:mm:ss.SSSZ"}t, "X-Forwarded-For": "%{X-Forwarded-For}i", "ip": "%a", "requestTime": "%T", "status": "%s", "size": "%B", "userAgent": "%{User-Agent}i", "referer": "%{Referer}i", "uri": "%U", "method": "%m", "args": "%q", "Accept-Encoding": "%{Accept-Encoding}i"}'
+      directory: ./
+      max-days: 14
+      condition-unless: doNotLog
+    relaxed-query-chars: ['<','>','[',']','\','^','`','{','}','|']
+  forward-headers-strategy: framework
+
+process:
+  template:
+    elasticsearch:
+      docker-compose: 'configurations/aws/docker/elasticsearch/docker-compose.yml'
+      java-opts: '-Xms_HEAPSIZE_m -Xmx_HEAPSIZE_m'
+    kibana:
+      docker-compose: 'configurations/aws/docker/kibana/docker-compose.yml'
+    ansible:
+      playbook:
+        elasticsearch:
+          base: 'configurations/aws/ansible/elasticsearch/playbook.yml'
+          docker-start: 'configurations/aws/ansible/elasticsearch/docker-start.yml'
+          docker-stop: 'configurations/aws/ansible/elasticsearch/docker-stop.yml'
+        kibana:
+          base: 'configurations/aws/ansible/kibana/playbook.yml'
+          docker-start: 'configurations/aws/ansible/kibana/docker-start.yml'
+          docker-stop: 'configurations/aws/ansible/kibana/docker-stop.yml'
+      inventories:
+        elasticsearch:
+          base: 'configurations/aws/ansible/inventories/elasticsearch/hosts'
+          nodes: '/ansible/elasticsearch/inventories/nodes/hosts'
+        kibana:
+          base: 'configurations/aws/ansible/inventories/kibana/hosts'
+          nodes: '/ansible/kibana/inventories/nodes/hosts'
+      roles:
+        elasticsearch:
+          base: 'configurations/aws/ansible/roles/elasticsearch/tasks/main.yml'
+          docker-start: 'configurations/aws/ansible/roles/elasticsearch/docker/start/tasks/main.yml'
+          docker-stop: 'configurations/aws/ansible/roles/elasticsearch/docker/stop/tasks/main.yml'
+        kibana:
+          base: 'configurations/aws/ansible/roles/kibana/tasks/main.yml'
+          docker-start: 'configurations/aws/ansible/roles/kibana/docker/start/tasks/main.yml'
+          docker-stop: 'configurations/aws/ansible/roles/kibana/docker/stop/tasks/main.yml'
+    terraform:
+      elasticsearch:
+        init: 'configurations/aws/terraform/elasticsearch/init.sh'
+        setup: 'configurations/aws/terraform/elasticsearch/setup.tf'
+      kibana:
+        init: 'configurations/aws/terraform/kibana/init.sh'
+        setup: 'configurations/aws/terraform/kibana/setup.tf'
+      provider: 'configurations/aws/terraform/provider.tf'
+
+    docker:
+      elasticsearch:
+        docker-compose: '/home/mzc/apps/elastic/elasticsearch/docker-compose.yml'
+      kibana:
+        docker-compose: '/home/mzc/apps/elastic/kibana/docker-compose.yml'
+  aws:
+    ec2:
+      describe-instance-types: 'aws ec2 describe-instance-types'
+  docker:
+    path:
+      elasticsearch:
+        base: '/docker/elasticsearch'
+        docker-compose: '/docker/elasticsearch/_PRIVATEIP_/docker-compose.yml'
+      kibana:
+        base: '/docker/kibana'
+        docker-compose: '/docker/kibana/_PRIVATEIP_/docker-compose.yml'
+  terraform:
+    path:
+      temporary:
+        base: '/tmp/terraform'
+        backup: '/tmp/home/mzc/backup/terraform'
+    state:
+      s3:
+        copy: 'cd _TEMPTERRAFORMPATH_; aws s3 cp s3://_BACKENDBUCKET_/_BACKENDKEY terraform.tfstate'
+  ansible:
+    path:
+      temporary: '/tmp/ansible'
+      elasticsearch:
+        base: '/ansible/elasticsearch'
+        playbook:
+          base: '/ansible/elasticsearch/_PRIVATEIP_.yml'
+          docker-start: '/ansible/elasticsearch/docker-start-_PRIVATEIP_.yml'
+          docker-stop: '/ansible/elasticsearch/docker-stop-_PRIVATEIP_.yml'
+          docker-start-nodes: '/ansible/elasticsearch/docker-start.yml'
+          docker-stop-nodes: '/ansible/elasticsearch/docker-stop.yml'
+        inventories:
+          base: '/ansible/elasticsearch/inventories'
+          nodes: '/ansible/elasticsearch/inventories/nodes'
+        roles:
+          base: '/ansible/elasticsearch/roles/_PRIVATEIP_/tasks'
+          docker-start-dir: '/ansible/elasticsearch/roles/docker-start-_PRIVATEIP_/tasks'
+          docker-stop-dir: '/ansible/elasticsearch/roles/docker-stop-_PRIVATEIP_/tasks'
+          docker-start-file: '/ansible/elasticsearch/roles/docker-start-_PRIVATEIP_/tasks/main.yml'
+          docker-stop-file: '/ansible/elasticsearch/roles/docker-stop-_PRIVATEIP_/tasks/main.yml'
+          docker-start-nodes-dir: '/ansible/elasticsearch/roles/docker-start-nodes/tasks'
+          docker-stop-nodes-dir: '/ansible/elasticsearch/roles/docker-stop-nodes/tasks'
+          docker-start-nodes-file: '/ansible/elasticsearch/roles/docker-start-nodes/tasks/main.yml'
+          docker-stop-nodes-file: '/ansible/elasticsearch/roles/docker-stop-nodes/tasks/main.yml'
+        install: 'cd _ANSIBLE_; ansible-playbook -i inventories/_PRIVATEIP_ _PRIVATEIP_.yml'
+      kibana:
+        base: '/ansible/kibana'
+        playbook:
+          base: '/ansible/kibana/_PRIVATEIP_.yml'
+          docker-start: '/ansible/kibana/docker-start-_PRIVATEIP_.yml'
+          docker-stop: '/ansible/kibana/docker-stop-_PRIVATEIP_.yml'
+          docker-start-nodes: '/ansible/kibana/docker-start.yml'
+          docker-stop-nodes: '/ansible/kibana/docker-stop.yml'
+        inventories:
+          base: '/ansible/kibana/inventories'
+          nodes: '/ansible/kibana/inventories/nodes'
+        roles:
+          base: '/ansible/kibana/roles/_PRIVATEIP_/tasks'
+          docker-start-dir: '/ansible/kibana/roles/docker-start-_PRIVATEIP_/tasks'
+          docker-stop-dir: '/ansible/kibana/roles/docker-stop-_PRIVATEIP_/tasks'
+          docker-start-file: '/ansible/kibana/roles/docker-start-_PRIVATEIP_/tasks/main.yml'
+          docker-stop-file: '/ansible/kibana/roles/docker-stop-_PRIVATEIP_/tasks/main.yml'
+          docker-start-nodes-dir: '/ansible/kibana/roles/docker-start-nodes/tasks'
+          docker-stop-nodes-dir: '/ansible/kibana/roles/docker-stop-nodes/tasks'
+          docker-start-nodes-file: '/ansible/kibana/roles/docker-start-nodes/tasks/main.yml'
+          docker-stop-nodes-file: '/ansible/kibana/roles/docker-stop-nodes/tasks/main.yml'
+        install: 'cd _ANSIBLE_; ansible-playbook -i inventories/_PRIVATEIP_ _PRIVATEIP_.yml'
+    escluster:
+      docker-start: 'cd _ANSIBLE_; ansible-playbook -i inventories/_PRIVATEIP_ docker-start-_PRIVATEIP_.yml'
+      docker-stop: 'cd _ANSIBLE_; ansible-playbook -i inventories/_PRIVATEIP_ docker-stop-_PRIVATEIP_.yml'
+    kibana:
+      docker-start: 'cd _ANSIBLE_; ansible-playbook -i inventories/_PRIVATEIP_ docker-start-_PRIVATEIP_.yml'
+      docker-stop: 'cd _ANSIBLE_; ansible-playbook -i inventories/_PRIVATEIP_ docker-stop-_PRIVATEIP_.yml'
+    esnode:
+      docker-start: 'cd _ANSIBLE_; ansible-playbook -i inventories/nodes docker-start.yml'
+      docker-stop: 'cd _ANSIBLE_; ansible-playbook -i inventories/nodes docker-stop.yml'
+    kbnode:
+      docker-start: 'cd _ANSIBLE_; ansible-playbook -i inventories/nodes docker-start.yml'
+      docker-stop: 'cd _ANSIBLE_; ansible-playbook -i inventories/nodes docker-stop.yml'
+
+
+config:
+  working-path: '/tmp/home/mzc/app'
+  terraform:
+    aws:
+#      bastion-ip: 'xxx.xxx.xxx.xxx'
+      security-group: 'sg-xxxxxxxxxxxxxxxx'
+      az: 'ap-northeast-2a'
+      ami: 'ami-061b0ee20654981ab'
+      subnet: 'subnet-xxxxxxxxxxxxxxxx'
+      key-name: 'ec2key-gw'
+      pem-file: 'ec2key-gw.pem'
+      path:
+        elasticsearch: '/tmp/home/mzc/app/terraform/_CLUSTERNAME_'
+        kibana: '/tmp/home/mzc/app/terraform/_CLUSTERNAME_/kibana'
+      backend-bucket: 'megatoi-terraform-state'
+      backend-key:
+        elasticsearch: '_CLUSTERNAME_/terraform.tfstate'
+        kibana: '_CLUSTERNAME_/kibana/terraform.tfstate'
+  elasticsearch:
+    http-port: 9200
+    tcp-port: 9300
+    path-data: /home/mzc/apps/elastic/elasticsearch/data
+    path-logs: /home/mzc/apps/elastic/elasticsearch/logs
+
+#security:
+#  enable:
+#    csrf: true
+#  basic:
+#    enabled: false
+#
+#management:
+#  security:
+#    enabled: false
+
+# logging
+logging:
+  config: classpath:logback-spring.xml
+  pattern:
+    dateformat: yyyy-MM-dd HH:mm:ss.SSS,Asia/Seoul
+    rolling-file-name: ${LOG_FILE}.%d{yyyy-MM-dd}.%i.gz
+  level:
+    root: ERROR
+    com:
+      mzc:
+        ecos: DEBUG

@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorator="layout/defaultLayout">
+
+<th:block layout:fragment="html_head">
+<style>
+.btn-console {
+    width: 350px !important;
+}
+</style>
+</th:block>
+
+<th:block layout:fragment="bodyFragment">
+  <body class="sb-nav-fixed">
+  <th:block th:replace="fragments/commons :: navBarFragment"></th:block>
+  <div id="layoutSidenav">
+    <th:block th:replace="fragments/commons :: sideNavFragment"></th:block>
+    <div id="layoutSidenav_content">
+      <main>
+        <div class="container-fluid">
+          <nav>
+            <div class="nav nav-tabs nav-pills" id="nav-tab" role="tablist">
+
+              <a class="nav-item nav-link active" id="nav-mngt-terraform-state" data-toggle="tab" href="#mngt-terraform-state" role="tab" aria-controls="mngt-terraform-state" aria-selected="true">Terraform State</a>
+
+              <a class="nav-item nav-link" id="nav-mngt-nodes-restart" data-toggle="tab" href="#mngt-nodes-restart" role="tab" aria-controls="mngt-nodes-restart" aria-selected="false">Nodes Start/Stop</a>
+
+              <a class="nav-item nav-link" id="nav-log-viewer" data-toggle="tab" href="#log-viewer" role="tab" aria-controls="log-viewer" aria-selected="false">Console Log Viewer</a>
+
+            </div>
+          </nav>
+
+          <div class="tab-content" id="nav-tabContent">
+            <div class="tab-pane fade show active" id="mngt-terraform-state" role="tabpanel" aria-labelledby="nav-mngt-terraform-state">
+              <div class="card">
+                <div class="card-body">
+                  <form name="terraformForm">
+                    <table class="table table-sm table-striped table-dark">
+                      <tr>
+                        <td>S3 Backend Bucket</td>
+                        <td>
+                          <input type="text" class="form-control form-control-sm" id="backendBucket" name="backendBucket" th:value="${config.terraformAwsBackendBucket}">
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>Extracted Node IPs</td>
+                        <td>
+                          <input type="text" class="form-control form-control-sm" id="extractedNodeIps" name="extractedNodeIps" value="">
+                        </td>
+                      </tr>
+                    </table>
+                  </form>
+                  <a href="javascript:;" class="btn-sm btn-primary" role="button" onclick="listTerraformStateFile();">Terraform State 목록</a>
+                  <ul class="list-group" id="terraformStateListUl">
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <div class="tab-pane fade" id="mngt-nodes-restart" role="tabpanel" aria-labelledby="nav-mngt-nodes-restart">
+              <div class="card">
+                <div class="card-body">
+                  <form name="ansibleForm">
+                    <input type="hidden" class="form-control form-control-sm" id="temporaryAnsiblePath" name="temporaryAnsiblePath">
+                    <table class="table table-sm table-striped table-dark">
+                      <tr>
+                        <td>Pem File</td>
+                        <td>
+                          <input type="text" class="form-control form-control-sm" id="keyPem" name="keyPem" th:value="${config.terraformAwsPemFile}">
+                        </td>
+                        <td>Bastion Host IP</td>
+                        <td>
+                          <input type="text" class="form-control form-control-sm" id="bastionIp" name="bastionIp" th:value="${config.terraformAwsBastionIp}">
+                        </td>
+                        <td>Node IPs</td>
+                        <td>
+                          <input type="text" class="form-control form-control-sm" id="nodeIps" name="nodeIps">
+                        </td>
+                      </tr>
+                    </table>
+
+                  </form>
+                </div>
+              </div>
+              <div class="card">
+                <div class="card-body">
+                  <a href="javascript:;" class="btn-sm btn-primary" role="button" onclick="createTemporaryAnsibleForNodeRestart();">Create Playbook</a>
+                  <a href="javascript:;" class="btn-sm btn-primary" role="button" onclick="startNodeByAnsible();">Node Start</a>
+                  <a href="javascript:;" class="btn-sm btn-primary" role="button" onclick="stopNodeByAnsible();">Node Stop</a>
+                </div>
+              </div>
+            </div>
+
+            <div class="tab-pane fade" id="log-viewer" role="tabpanel" aria-labelledby="nav-log-viewer">
+              <div class="card">
+                <div class="card-body">
+                  <div id="ecosConsoleLog" style="width:100%; height:400px;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </main>
+      <th:block th:replace="fragments/commons :: footerFragment"></th:block>
+    </div>
+  </div>
+  <th:block th:include="fragments/bottomScript"></th:block>
+  <script src="/statics/js/ace/ace.js"></script>
+  <script src="/statics/js/ace/ext-beautify.js"></script>
+<!--  <script src="/statics/js/starter/elasticsearch.js"></script>-->
+  </body>
+<script th:inline="javascript">
+$(document).ready(function () {
+  drawConsoleLog("ecosConsoleLog");
+});
+
+function drawConsoleLog(viewer){
+  var beautify = ace.require("ace/ext/beautify");
+  var editor = ace.edit(viewer);
+//  editor.setOptions({ maxLines: Infinity });
+  editor.setOptions({ newLineMode: 'auto' });
+  editor.setTheme("ace/theme/nord_dark");
+  editor.session.setMode("ace/mode/text");
+  editor.setShowInvisibles(false);
+  editor.setReadOnly(true);
+  editor.setShowPrintMargin(false);
+  editor.session.setTabSize(2);
+  editor.session.setUseSoftTabs(true);
+  editor.session.setUseWrapMode(true);
+
+  beautify.beautify(editor.session);
+
+  editor.resize();
+}
+
+function setConsoleLog(viewer, log) {
+  let editor = ace.edit(viewer);
+
+  try {
+    log = log.replace(/\u001b\[.*?m/ig, '');
+  } catch(e) {
+    console.log(e);
+  }
+
+  editor.setValue(
+    editor.getValue() +
+    "\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n" +
+    "\n+++++++++++++++++++++++++++++++ End of Logs +++++++++++++++++++++++++++++++\n" +
+    "\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n" +
+    log
+  );
+
+  drawConsoleLog(viewer);
+}
+
+let instanceRequestModel = {
+  terraformRequestModel: {
+    vpcSecurityGroupIds:"",
+    subnetId:"",
+    zoneId:"",
+    keyPem:"",
+    amiId:"ami-0d0bbf63",
+    tfPath:"",
+    env:"dev",
+    backendBucket:"",
+    backendKey:"",
+    isBackend:false
+  },
+  elasticsearchClusterRequestModel: {
+    clusterName:"",
+    esVersion:"",
+  },
+  nodeSize:0,
+  instances:[],
+  workingPath:"",
+  bastionIp:"",
+}
+
+function listTerraformStateFile() {
+  let fm = document.terraformForm;
+  let backendBucket = fm.backendBucket.value;
+
+  $.ajax({
+    url: "/api/aws/terraform/list-terraform-state-file",
+    type: "POST",
+    dataType: "json",
+    contentType: 'application/json',
+    data: JSON.stringify({
+      "backendBucket": backendBucket
+    }),
+    success: function (res) {
+      console.log(res);
+      setConsoleLog("ecosConsoleLog", res);
+      drawListTerraformStateFile(res);
+    },
+    error: function (res) {
+      console.log(res);
+      setConsoleLog("ecosConsoleLog", res);
+    }
+  });
+}
+
+function drawListTerraformStateFile(res) {
+  let ul = $('#terraformStateListUl');
+  let template = '<li class="list-group-item">_KEY_ <a href="" class="btn-sm btn-danger" role="button">Infrastructure Resource 삭제</a></li>';
+  let backendKey;
+
+  ul.html('');
+
+  for ( let i=0; i<res.length; i++ ) {
+    backendKey = res[i].key.split("/");
+    if ( backendKey[1] == "kibana" ) {
+      ul.append('<li class="list-group-item">'+res[i].key+' <a href="javascript:;" class="btn-sm btn-danger" role="button" onclick="destroyResource(\''+res[i].key+'\')">Resource 삭제</a> <a href="javascript:;" class="btn-sm btn-danger" role="button" onclick="deleteTfState(\''+res[i].key+'\')">Terraform State 삭제</a> <a href="javascript:;" class="btn-sm btn-primary" role="button" onclick="fetchNodeIps(\''+res[i].key+'\');">Node IP 추출</a></li>');
+    }
+  }
+}
+
+function fetchNodeIps(backendKey) {
+  const fm = document.terraformForm;
+  let backendBucket = fm.backendBucket.value;
+
+  spinner_show();
+
+  $.ajax({
+    url: "/api/aws/terraform/fetch-terraform-state",
+    type: "POST",
+    dataType: "json",
+    contentType: 'application/json',
+    data: JSON.stringify({
+      "backendBucket": backendBucket,
+      "backendKey": backendKey,
+    }),
+    success: function (res) {
+      setConsoleLog("ecosConsoleLog", res);
+      spinner_hide();
+      console.log(res);
+      fm.extractedNodeIps.value = extractNodeIps(res);
+    },
+    error: function (res) {
+      setConsoleLog("ecosConsoleLog", res);
+      spinner_hide();
+      console.log(res);
+      alert("오류가 발생했습니다.");
+    }
+  });
+}
+
+function extractNodeIps(res) {
+  let nodeIps = "";
+
+  try {
+    res = JSON.parse(res);
+
+    if ( res.outputs.kibana_private_ip === undefined ) {
+      throw new Error("Node Topology Undefined!!");
+    }
+
+    nodeIps = extractInstancePrivateIp(res.outputs.kibana_private_ip.value);
+  } catch (e) {
+    setConsoleLog("ecosConsoleLog", e);
+    console.log(e);
+  }
+
+  return nodeIps;
+}
+
+function extractInstancePrivateIp(ips) {
+  let tempIps = "";
+
+  for (let i=0; i<ips.length; i++ ) {
+    tempIps += ips[i] + ",";
+  }
+
+  return tempIps.substring(0, tempIps.length - 1);
+}
+
+function destroyResource(backendKey) {
+  let fm = document.terraformForm;
+
+  spinner_show();
+
+  $.ajax({
+    url: "/api/aws/terraform/destroy-resource-by-terraform",
+    type: "POST",
+    dataType: "json",
+    contentType: 'application/json',
+    data: JSON.stringify({
+      "backendBucket": fm.backendBucket.value,
+      "backendKey": backendKey
+    }),
+    success: function (res) {
+      console.log(res);
+      setConsoleLog("ecosConsoleLog", res);
+      spinner_hide();
+      alert("삭제 되었습니다.");
+    },
+    error: function (res) {
+      console.log(res);
+      setConsoleLog("ecosConsoleLog", res);
+      spinner_hide();
+      alert("오류가 발생했습니다.");
+    }
+  });
+}
+
+function deleteTfState(backendKey) {
+  let fm = document.terraformForm;
+
+  spinner_show();
+
+  $.ajax({
+    url: "/api/aws/terraform/delete-tfstate",
+    type: "POST",
+    dataType: "json",
+    contentType: 'application/json',
+    data: JSON.stringify({
+      "backendBucket": fm.backendBucket.value,
+      "backendKey": backendKey
+    }),
+    success: function (res) {
+      console.log(res);
+      setConsoleLog("ecosConsoleLog", res);
+      spinner_hide();
+      alert("삭제 되었습니다.");
+    },
+    error: function (res) {
+      console.log(res);
+      setConsoleLog("ecosConsoleLog", res);
+      spinner_hide();
+      alert("오류가 발생했습니다.");
+    }
+  });
+}
+
+function createTemporaryAnsibleForNodeRestart() {
+  const fm = document.ansibleForm;
+  let keyPem = fm.keyPem.value;
+  let bastionIp = fm.bastionIp.value;
+  let nodeIps = fm.nodeIps.value;
+
+  spinner_show();
+
+  $.ajax({
+    url: "/api/aws/kibana/create-temporary-ansible-for-node",
+    type: "POST",
+    dataType: "json",
+    contentType: 'application/json',
+    data: JSON.stringify({
+      "keyPem": keyPem,
+      "bastionIp": bastionIp,
+      "nodeIps": nodeIps,
+    }),
+    success: function (res) {
+      fm.temporaryAnsiblePath.value = res.temporaryAnsiblePath;
+      setConsoleLog("ecosConsoleLog", res.temporaryAnsiblePath);
+      console.log(res);
+      spinner_hide();
+      alert("생성 되었습니다.");
+    },
+    error: function (res) {
+      setConsoleLog("ecosConsoleLog", res);
+      console.log(res);
+      spinner_hide();
+      alert("오류가 발생했습니다.");
+    }
+  });
+}
+
+function startNodeByAnsible() {
+  const fm = document.ansibleForm;
+  let keyPem = fm.keyPem.value;
+  let bastionIp = fm.bastionIp.value;
+  let nodeIps = fm.nodeIps.value;
+  let temporaryAnsiblePath = fm.temporaryAnsiblePath.value;
+
+  spinner_show();
+
+  $.ajax({
+    url: "/api/aws/kibana/start-node-by-ansible",
+    type: "POST",
+    dataType: "json",
+    contentType: 'application/json',
+    data: JSON.stringify({
+      "keyPem": keyPem,
+      "bastionIp": bastionIp,
+      "nodeIps": nodeIps,
+      "temporaryAnsiblePath": temporaryAnsiblePath,
+    }),
+    success: function (res) {
+      setConsoleLog("ecosConsoleLog", res);
+      console.log(res);
+      spinner_hide();
+      alert("시작 되었습니다.");
+    },
+    error: function (res) {
+      setConsoleLog("ecosConsoleLog", res);
+      console.log(res);
+      spinner_hide();
+      alert("오류가 발생했습니다.");
+    }
+  });
+}
+
+function stopNodeByAnsible() {
+  const fm = document.ansibleForm;
+  let keyPem = fm.keyPem.value;
+  let bastionIp = fm.bastionIp.value;
+  let nodeIps = fm.nodeIps.value;
+  let temporaryAnsiblePath = fm.temporaryAnsiblePath.value;
+
+  spinner_show();
+
+  $.ajax({
+    url: "/api/aws/kibana/stop-node-by-ansible",
+    type: "POST",
+    dataType: "json",
+    contentType: 'application/json',
+    data: JSON.stringify({
+      "keyPem": keyPem,
+      "bastionIp": bastionIp,
+      "nodeIps": nodeIps,
+      "temporaryAnsiblePath": temporaryAnsiblePath,
+    }),
+    success: function (res) {
+      setConsoleLog("ecosConsoleLog", res);
+      console.log(res);
+      spinner_hide();
+      alert("중지 되었습니다.");
+    },
+    error: function (res) {
+      setConsoleLog("ecosConsoleLog", res);
+      console.log(res);
+      spinner_hide();
+      alert("오류가 발생했습니다.");
+    }
+  });
+}
+</script>
+</th:block>
+</html>

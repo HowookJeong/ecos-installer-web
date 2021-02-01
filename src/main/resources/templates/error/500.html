@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorator="layout/defaultLayout">
+
+<th:block layout:fragment="html_head">
+</th:block>
+
+<th:block layout:fragment="bodyFragment">
+  <body class="sb-nav-fixed">
+  <th:block th:replace="fragments/commons :: navBarFragment"></th:block>
+  <div id="layoutSidenav">
+    <th:block th:replace="fragments/commons :: sideNavFragment"></th:block>
+    <div id="layoutSidenav_content">
+      <main>
+        <div id="position-relative error-page" class="error-page">
+          <strong class="text-danger">500</strong>
+          <p>페이지가 작동하지 않습니다.</p>
+          <p>현재 요청을 처리할 수 없습니다.</p>
+          <button onclick="history.back();" type="button" class="btn btn-outline-secondary btn-rounded">뒤로가기</button>
+          <button onclick="self.location.href='/';" type="button" class="btn btn-outline-secondary btn-rounded">홈으로</button>
+        </div>
+      </main>
+      <th:block th:replace="fragments/commons :: footerFragment"></th:block>
+    </div>
+  </div>
+
+  <th:block th:include="fragments/bottomScript"></th:block>
+  </body>
+</th:block>
+</html>

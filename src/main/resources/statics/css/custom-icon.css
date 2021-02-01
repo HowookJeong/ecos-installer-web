@@ -1,0 +1,162 @@
+.lamp-on {
+  width: 20px;
+  height: 20px;
+  background: url('/statics/images/svg/lamp-on.svg') no-repeat top left;
+  background-size: contain;
+}
+
+.lamp-off {
+  width: 20px;
+  height: 20px;
+  background: url('/statics/images/svg/lamp-off.svg') no-repeat top left;
+  background-size: contain;
+}
+
+.docker-icon {
+  margin-top: -1px;
+  width: 20px;
+  height: 20px;
+  background: url('/statics/images/svg/docker.svg') no-repeat top left;
+  background-size: contain;
+}
+
+.update-icon {
+  margin-top: -4px;
+  width: 20px;
+  height: 20px;
+  background: url('/statics/images/svg/update.svg') no-repeat top left;
+  background-size: contain;
+}
+
+.elastic-icon {
+  width: 20px;
+  height: 20px;
+  background: url('/statics/images/svg/dashboard/elasticsearch.svg') no-repeat top left;
+  background-size: contain;
+}
+
+.elastic-icon-40 {
+  width: 40px;
+  height: 40px;
+  background: url('/statics/images/svg/dashboard/elasticsearch.svg') no-repeat top left;
+  background-size: contain;
+}
+
+.cpu-icon {
+  width: 20px;
+  height: 20px;
+  background: url('/statics/images/svg/dashboard/cpu.svg') no-repeat top left;
+  background-size: contain;
+}
+
+.disk-icon {
+  width: 20px;
+  height: 20px;
+  background: url('/statics/images/svg/dashboard/disk.svg') no-repeat top left;
+  background-size: contain;
+}
+
+.memory-icon {
+  width: 20px;
+  height: 20px;
+  background: url('/statics/images/svg/dashboard/memory.svg') no-repeat top left;
+  background-size: contain;
+}
+
+
+.heart-icon {
+  margin-top: -4px;
+  width: 20px;
+  height: 20px;
+  background: url('/statics/images/svg/cardiogram.svg') no-repeat top left;
+  background-size: contain;
+}
+
+.checklist-icon {
+  margin-top: -4px;
+  width: 20px;
+  height: 20px;
+  background: url('/statics/images/svg/check-list.svg') no-repeat top left;
+  background-size: contain;
+}
+
+.checklist-icon {
+  margin-top: -4px;
+  width: 20px;
+  height: 20px;
+  background: url('/statics/images/svg/check-list.svg') no-repeat top left;
+  background-size: contain;
+}
+
+.check-icon {
+  margin-top: 0px;
+  width: 20px;
+  height: 20px;
+  background: url('/statics/images/svg/check.svg') no-repeat top left;
+  background-size: contain;
+}
+
+.warning-icon {
+  margin-top: 0px;
+  width: 20px;
+  height: 20px;
+  background: url('/statics/images/svg/warning.svg') no-repeat top left;
+  background-size: contain;
+}
+
+/* docker status icon */
+.created-icon {
+  margin-top: 0px;
+  width: 20px;
+  height: 20px;
+  background: url('/statics/images/svg/created.svg') no-repeat top left;
+  background-size: contain;
+}
+
+.restarting-icon {
+  margin-top: 0px;
+  width: 20px;
+  height: 20px;
+  background: url('/statics/images/svg/restarting.svg') no-repeat top left;
+  background-size: contain;
+}
+
+.running-icon {
+  margin-top: 0px;
+  width: 20px;
+  height: 20px;
+  background: url('/statics/images/svg/running.svg') no-repeat top left;
+  background-size: contain;
+}
+
+.removing-icon {
+  margin-top: 0px;
+  width: 20px;
+  height: 20px;
+  background: url('/statics/images/svg/removing.svg') no-repeat top left;
+  background-size: contain;
+}
+
+.paused-icon {
+  margin-top: 0px;
+  width: 20px;
+  height: 20px;
+  background: url('/statics/images/svg/paused.svg') no-repeat top left;
+  background-size: contain;
+}
+
+.exited-icon {
+  margin-top: 0px;
+  width: 20px;
+  height: 20px;
+  background: url('/statics/images/svg/exited.svg') no-repeat top left;
+  background-size: contain;
+}
+
+.dead-icon {
+  margin-top: 0px;
+  width: 20px;
+  height: 20px;
+  background: url('/statics/images/svg/dead.svg') no-repeat top left;
+  background-size: contain;
+}

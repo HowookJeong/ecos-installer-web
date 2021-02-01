@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorator="layout/defaultLayout">
+
+<th:block layout:fragment="html_head">
+<style>
+.btn-console {
+    width: 350px !important;
+}
+</style>
+</th:block>
+
+<th:block layout:fragment="bodyFragment">
+  <body class="sb-nav-fixed">
+  <th:block th:replace="fragments/commons :: navBarFragment"></th:block>
+  <div id="layoutSidenav">
+    <th:block th:replace="fragments/commons :: sideNavFragment"></th:block>
+    <div id="layoutSidenav_content">
+      <main>
+        <div class="container-fluid">
+          <nav>
+            <div class="nav nav-tabs nav-pills" id="nav-tab" role="tablist">
+              <a class="nav-item nav-link active" id="nav-topology-configuration" data-toggle="tab" href="#topology-configuration" role="tab" aria-controls="topology-configuration" aria-selected="true">Step 1 - Topology Configuration</a>
+              <a class="nav-item nav-link" id="nav-cluster-installation" data-toggle="tab" href="#cluster-installation" role="tab" aria-controls="cluster-installation" aria-selected="false">Step 2 - Cluster Installation</a>
+              <a class="nav-item nav-link" id="nav-cluster-run" data-toggle="tab" href="#cluster-run" role="tab" aria-controls="cluster-run" aria-selected="false">Step 3 - Run</a>
+              <a class="nav-item nav-link" id="nav-log-viewer" data-toggle="tab" href="#log-viewer" role="tab" aria-controls="log-viewer" aria-selected="false">Console Log Viewer</a>
+            </div>
+          </nav>
+
+          <div class="tab-content" id="nav-tabContent">
+            <div class="tab-pane fade show active" id="topology-configuration" role="tabpanel" aria-labelledby="nav-topology-configuration">
+              <div class="card">
+                <div class="card-body">
+                  <form name="infrastructureForm">
+                    <div class="row">
+                      <div class="col-sm-8">
+                        <div id="awsInfra">
+                          <table class="table table-sm table-striped table-dark">
+                            <tr>
+                              <td>Cluster Name</td>
+                              <td>
+                                <input type="text" class="form-control form-control-sm" id="clusterName" name="clusterName" value="">
+                              </td>
+                              <td>
+                                <div class="form-check">
+                                  <input type="checkbox" class="form-check-input" id="isAppend" name="isAppend" onclick="resetAppendMode();">
+                                  <label class="form-check-label" for="isAppend">Append Mode</label>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>Node Topology</td>
+                              <td>
+                                <select class="form-control form-control-sm" id="topology" name="topology">
+                                  <option value="allinone">Master and Data</option>
+                                  <option value="master">Master</option>
+                                  <option value="data">Data</option>
+                                  <option value="coordinator">Coordinator</option>
+                                </select>
+                              </td>
+                              <td>Vendor</td>
+                              <td>
+                                <select class="form-control form-control-sm" id="vendor" name="vendor">
+                                  <option value="aws">AWS</option>
+                                  <option value="azure">MS Azure</option>
+                                  <option value="gcp">GCP</option>
+                                </select>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>Instance Types</td>
+                              <td>
+                                <select class="form-control form-control-sm" id="instanceType" name="instanceType">
+                                </select>
+                              </td>
+                              <td>Elastic Stack</td>
+                              <td>
+                                <select class="form-control form-control-sm" id="stack" name="stack" disabled>
+                                  <option value="elasticsearch" checked="true">Elasticsearch</option>
+                                  <option value="logstash">logstash</option>
+                                  <option value="kibana">kibana</option>
+                                </select>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>Instance Size</td>
+                              <td>
+                                <input type="text" class="form-control form-control-sm" id="instanceSize" name="instanceSize" value="3">
+                              </td>
+                              <td>Volume Size</td>
+                              <td>
+                                <input type="text" class="form-control form-control-sm" id="volumeSize" name="volumeSize" value="10">
+                              </td>
+                            </tr>
+                          </table>
+
+                          <a href="javascript:;" class="btn-sm btn-primary" role="button" onclick="registerNode();">등록</a>
+
+                        </div>
+                      </div>
+                      <div class="col-sm-4">
+                        <table class="table table-sm table-striped table-dark">
+                          <tr>
+                            <td>Topology</td>
+                            <td>Instance</td>
+                            <td>Count</td>
+                            <td>Volume</td>
+                          </tr>
+                          <tr id="allinoneNode"></tr>
+                          <tr id="masterNode"></tr>
+                          <tr id="dataNode"></tr>
+                          <tr id="coordinatorNode"></tr>
+                        </table>
+                      </div>
+                    </div>
+                  </form>
+                </div>
+              </div>
+
+              <div class="card">
+                <div class="card-body">
+                  <a href="javascript:;" class="btn-sm btn-primary" role="button" onclick="registerTerraform(); createInstances();">Create Instances</a>
+                  <a href="javascript:;" class="btn-sm btn-primary" role="button" onclick="destroyInstances();">Destroy Instances</a>
+                  <a href="javascript:;" class="btn-sm btn-secondary" role="button" onclick="registerTerraform();">재설정</a>
+                </div>
+              </div>
+
+              <div class="card">
+                <div class="card-body">
+                  <form name="terraformForm">
+                    <div class="row">
+                      <div class="col-sm-8">
+                        <table class="table table-sm table-striped table-dark">
+                          <tr>
+                            <td>VPC Security Group IDs</td>
+                            <td>
+                              <input type="text" class="form-control form-control-sm" id="vpcSecurityGroupIds" name="vpcSecurityGroupIds" th:value="${config.terraformAwsSecurityGroup}">
+                            </td>
+                            <td>Subnet</td>
+                            <td>
+                              <input type="text" class="form-control form-control-sm" id="subnetId" name="subnetId" th:value="${config.terraformAwsSubnet}">
+                            </td>
+                          </tr>
+                          <tr>
+                            <td>Available Zone</td>
+                            <td>
+                              <input type="text" class="form-control form-control-sm" id="zoneId" name="zoneId" th:value="${config.terraformAwsAz}">
+                            </td>
+                            <td>Key Name</td>
+                            <td>
+                              <input type="text" class="form-control form-control-sm" id="keyName" name="keyName" th:value="${config.terraformAwsKeyName}">
+                            </td>
+                          </tr>
+                          <tr>
+                            <td>AMI ID</td>
+                            <td>
+                              <input type="text" class="form-control form-control-sm" id="amiId" name="amiId" th:value="${config.terraformAwsAmi}">
+                            </td>
+                            <td>Pem File</td>
+                            <td>
+                              <input type="text" class="form-control form-control-sm" id="keyPem" name="keyPem" th:value="${config.terraformAwsPemFile}">
+                            </td>
+                          </tr>
+                          <tr>
+                            <td>Environment</td>
+                            <td>
+                              <input type="text" class="form-control form-control-sm" id="env" name="env" value="dev">
+                            </td>
+                            <td>Terraform File Path</td>
+                            <td>
+                              <input type="text" class="form-control form-control-sm" id="tfPath" name="tfPath" th:value="${config.terraformAwsPathElasticsearch}">
+                            </td>
+                          </tr>
+                          <tr>
+                            <td>
+                              <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="isTerraformBackend" name="isTerraformBackend" checked>
+                                <label class="form-check-label" for="isTerraformBackend">Backend Bucket</label>
+                              </div>
+                            </td>
+                            <td>
+                              <input type="text" class="form-control form-control-sm" id="terraformBackendBucket" name="terraformBackendBucket" th:value="${config.terraformAwsBackendBucket}" readonly>
+                            </td>
+                            <td>Backend Key</td>
+                            <td>
+                              <input type="text" class="form-control form-control-sm" id="terraformBackendKey" name="terraformBackendKey" th:value="${config.terraformAwsBackendKeyElasticsearch}" placeholder="key/file">
+                            </td>
+                          </tr>
+                        </table>
+                      </div>
+                      <div class="col-sm-4">
+                        <div id="terraformConfiguration">
+                        </div>
+                      </div>
+                    </div>
+                  </form>
+                </div>
+              </div>
+
+            </div>
+
+            <div class="tab-pane fade" id="cluster-installation" role="tabpanel" aria-labelledby="nav-cluster-installation">
+              <div class="card">
+                <div class="card-body">
+                  <form name="elasticsearchForm">
+                    <h1>신규 설치</h1>
+                    <div class="row">
+                      <table class="table table-sm table-striped table-dark">
+                        <tr>
+                          <td>Elasticsearch Version</td>
+                          <td>
+                            <select class="form-control form-control-sm" id="esVersion" name="esVersion">
+                              <option value="7.10.2">7.10.2</option>
+                              <option value="7.10.0">7.10.0</option>
+                              <option value="7.9.1">7.9.1</option>
+                              <option value="7.8.1">7.8.1</option>
+                              <option value="7.8">7.8</option>
+                            </select>
+                          </td>
+                          <td>Bastion Host IP</td>
+                          <td>
+                            <input type="text" class="form-control form-control-sm" id="bastionIp" name="bastionIp" th:value="${config.terraformAwsBastionIp}">
+                          </td>
+                        </tr>
+                      </table>
+                    </div>
+
+                    <a href="javascript:;" class="btn-sm btn-primary" role="button" onclick="createElasticsearchCluster();">신규설치</a>
+                    <a class="btn-sm btn-primary" data-toggle="collapse" href="#detailConfiguration" role="button" aria-expanded="false" aria-controls="detailConfiguration">상세설정</a>
+
+                    <hr>
+
+                    <h1>추가 설치</h1>
+                    <div class="row">
+                      <table class="table table-sm table-striped table-dark">
+                        <tr>
+                          <td>Backend Bucket</td>
+                          <td>
+                            <input type="text" class="form-control form-control-sm" id="backendBucket" name="backendBucket" th:value="${config.terraformAwsBackendBucket}" readonly>
+                          </td>
+                          <td>Backend Key</td>
+                          <td>
+                            <input type="text" class="form-control form-control-sm" id="backendKey" name="backendKey" th:value="${config.terraformAwsBackendKeyElasticsearch}">
+                          </td>
+                          <td>Master IP</td>
+                          <td>
+                            <input type="text" class="form-control form-control-sm" id="seedHosts" name="seedHosts">
+                          </td>
+                        </tr>
+                      </table>
+                    </div>
+
+<!--                    <a href="javascript:;" class="btn-sm btn-primary" role="button" onclick="fetchTerraformState();">Step 1) Master 정보 추출</a>-->
+                    <a href="javascript:;" class="btn-sm btn-primary" role="button" onclick="appendElasticsearchCluster();">추가 설치</a>
+                    <a class="btn-sm btn-primary" data-toggle="collapse" href="#detailConfiguration" role="button" aria-expanded="false" aria-controls="detailConfiguration">상세설정</a>
+
+                    <hr>
+
+                    <div class="row collapse" id="detailConfiguration">
+                      <table class="table table-sm table-striped table-dark">
+                        <tr>
+                          <td>Master</td>
+                          <td>
+                            <input type="text" class="form-control form-control-sm" id="masterIps" name="masterIps" readonly>
+                          </td>
+                          <td>Data</td>
+                          <td>
+                            <input type="text" class="form-control form-control-sm" id="dataIps" name="dataIps" readonly>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>HTTP/TCP Port</td>
+                          <td>
+                            <div class="row">
+                              <div class="col">
+                                <input type="text" class="form-control form-control-sm" id="masterHttpPort" name="masterHttpPort" th:value="${config.elasticsearchHttpPort}">
+                              </div>
+                              <div class="col">
+                                <input type="text" class="form-control form-control-sm" id="masterTcpPort" name="masterTcpPort" th:value="${config.elasticsearchTcpPort}">
+                              </div>
+                            </div>
+                          </td>
+                          <td>HTTP/TCP Port</td>
+                          <td>
+                            <div class="row">
+                              <div class="col">
+                                <input type="text" class="form-control form-control-sm" id="dataHttpPort" name="dataHttpPort" th:value="${config.elasticsearchHttpPort}">
+                              </div>
+                              <div class="col">
+                                <input type="text" class="form-control form-control-sm" id="dataTcpPort" name="dataTcpPort" th:value="${config.elasticsearchTcpPort}">
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>Path Data/Logs</td>
+                          <td>
+                            <div class="row">
+                              <div class="col">
+                                <input type="text" class="form-control form-control-sm" id="masterPathData" name="masterPathData" th:value="${config.elasticsearchPathData}">
+                              </div>
+                              <div class="col">
+                                <input type="text" class="form-control form-control-sm" id="masterPathLogs" name="masterPathLogs" th:value="${config.elasticsearchPathLogs}">
+                              </div>
+                            </div>
+                          </td>
+                          <td>Path Data/Logs</td>
+                          <td>
+                            <div class="row">
+                              <div class="col">
+                                <input type="text" class="form-control form-control-sm" id="dataPathData" name="dataPathData" th:value="${config.elasticsearchPathData}">
+                              </div>
+                              <div class="col">
+                                <input type="text" class="form-control form-control-sm" id="dataPathLogs" name="dataPathLogs" th:value="${config.elasticsearchPathLogs}">
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>Coordinator</td>
+                          <td>
+                            <input type="text" class="form-control form-control-sm" id="coordinatorIps" name="coordinatorIps" readonly>
+                          </td>
+                          <td>All in One</td>
+                          <td>
+                            <input type="text" class="form-control form-control-sm" id="allinoneIps" name="allinoneIps" readonly>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>HTTP/TCP Port</td>
+                          <td>
+                            <div class="row">
+                              <div class="col">
+                                <input type="text" class="form-control form-control-sm" id="coordinatorHttpPort" name="coordinatorHttpPort" th:value="${config.elasticsearchHttpPort}">
+                              </div>
+                              <div class="col">
+                                <input type="text" class="form-control form-control-sm" id="coordinatorTcpPort" name="coordinatorTcpPort" th:value="${config.elasticsearchTcpPort}">
+                              </div>
+                            </div>
+                          </td>
+                          <td>HTTP/TCP Port</td>
+                          <td>
+                            <div class="row">
+                              <div class="col">
+                                <input type="text" class="form-control form-control-sm" id="allinoneHttpPort" name="allinoneHttpPort" th:value="${config.elasticsearchHttpPort}">
+                              </div>
+                              <div class="col">
+                                <input type="text" class="form-control form-control-sm" id="allinoneTcpPort" name="allinoneTcpPort" th:value="${config.elasticsearchTcpPort}">
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>Path Data/Logs</td>
+                          <td>
+                            <div class="row">
+                              <div class="col">
+                                <input type="text" class="form-control form-control-sm" id="coordinatorPathData" name="coordinatorPathData" th:value="${config.elasticsearchPathData}">
+                              </div>
+                              <div class="col">
+                                <input type="text" class="form-control form-control-sm" id="coordinatorPathLogs" name="coordinatorPathLogs" th:value="${config.elasticsearchPathLogs}">
+                              </div>
+                            </div>
+                          </td>
+                          <td>Path Data/Logs</td>
+                          <td>
+                            <div class="row">
+                              <div class="col">
+                                <input type="text" class="form-control form-control-sm" id="allinonePathData" name="allinonePathData" th:value="${config.elasticsearchPathData}">
+                              </div>
+                              <div class="col">
+                                <input type="text" class="form-control form-control-sm" id="allinonePathLogs" name="allinonePathLogs" th:value="${config.elasticsearchPathLogs}">
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>Working Path<br>(Docker, Ansible)</td>
+                          <td>
+                            <input type="text" class="form-control form-control-sm" id="workingPath" name="workingPath" th:value="${config.workingPath}">
+                          </td>
+                        </tr>
+                      </table>
+                    </div>
+
+                  </form>
+
+                </div>
+              </div>
+            </div>
+
+            <div class="tab-pane fade" id="cluster-run" role="tabpanel" aria-labelledby="nav-cluster-run">
+              <div class="card">
+                <div class="card-body">
+                  <a href="javascript:;" class="btn-sm btn-primary" role="button" onclick="startClusterByAnsible();">Cluster Start</a>
+                  <a href="javascript:;" class="btn-sm btn-primary" role="button" onclick="stopClusterByAnsible();">Cluster Stop</a>
+                </div>
+              </div>
+            </div>
+
+            <div class="tab-pane fade" id="log-viewer" role="tabpanel" aria-labelledby="nav-log-viewer">
+              <div class="card">
+                <div class="card-body">
+                  <div id="ecosConsoleLog" style="width:100%; height:400px;">
+
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </main>
+      <th:block th:replace="fragments/commons :: footerFragment"></th:block>
+    </div>
+  </div>
+  <th:block th:include="fragments/bottomScript"></th:block>
+  <script src="/statics/js/ace/ace.js"></script>
+  <script src="/statics/js/starter/elasticsearch.js"></script>
+  </body>
+</th:block>
+</html>

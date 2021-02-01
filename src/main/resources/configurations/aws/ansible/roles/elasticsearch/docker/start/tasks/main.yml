@@ -1,0 +1,12 @@
+---
+
+- name: set vm.max_map_count
+  become: yes
+  become_method: sudo
+  shell: sysctl -w vm.max_map_count=262144
+
+- name: Run docker-compose up
+  docker_compose:
+    project_src: /home/mzc/apps/elastic/elasticsearch
+    build: no
+#  register: output

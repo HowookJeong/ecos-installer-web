@@ -1,0 +1,72 @@
+version: '3.7'
+
+services:
+  elasticsearch-_NODETOPOLOGY_:
+    image: docker.elastic.co/elasticsearch/elasticsearch:_VERSION_
+    container_name: elasticsearch-_NODETOPOLOGY_
+#    user: ${UID}:0
+#    privileged: true
+    environment:
+      - cluster.name=_CLUSTERNAME_
+      - node.name=_NODENAME_
+      - node.master=_NODEMASTER_
+      - node.data=_NODEDATA_
+      - node.ingest=true
+      - node.transform=true
+      - node.voting_only=false
+      - node.ml=false
+      - node.remote_cluster_client=false
+      - path.data=/usr/share/elasticsearch/data
+      - path.logs=/usr/share/elasticsearch/logs
+      - network.host=0.0.0.0
+      - network.publish_host=_NETWORKPUBLISHHOST_
+      - discovery.seed_hosts=_DISCOVERYSEEDHOSTS_
+      - _DISCOVERYANDCLUSTERMASTER_
+      - bootstrap.memory_lock=true
+      - http.port=9200
+      - http.max_content_length=100mb
+      - http.max_initial_line_length=4kb
+      - http.max_header_size=8kb
+      - http.compression=true
+      - http.compression_level=3
+      - http.cors.enabled=false
+      - http.cors.allow-origin=/https?:\/\/localhost(:[0-9]+)?/
+      - transport.port=9300
+      - transport.compress=false
+      - gateway.expected_data_nodes=1
+      - gateway.recover_after_data_nodes=1
+      - action.auto_create_index=true
+      - action.destructive_requires_name=true
+      - xpack.monitoring.collection.enabled=true
+      - xpack.ml.enabled=false
+      - TZ=Asia/Seoul
+      - "ES_JAVA_OPTS=_ESJAVAOPTS_"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nproc:
+        soft: 262140
+        hard: 262140
+      nofile:
+        soft: 262140
+        hard: 262140
+    sysctls:
+      net.core.somaxconn: 262140
+    healthcheck:
+      test: ["CMD-SHELL", "curl --silent --fail localhost:9200/_cat/health || exit 1"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
+    volumes:
+#      - _VOLUMESELASTICSEARCHCONFIG_/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+      - _VOLUMESELASTICSEARCHDATA_:/usr/share/elasticsearch/data:rw
+      - _VOLUMESELASTICSEARCHLOGS_:/usr/share/elasticsearch/logs:rw
+    ports:
+      - _PORTSELASTICSEARCHTTPPORT_:9200
+      - _PORTSELASTICSEARCHTCPPORT_:9300
+    expose:
+      - 9200
+      - 9300
+    restart: on-failure
+    network_mode: bridge

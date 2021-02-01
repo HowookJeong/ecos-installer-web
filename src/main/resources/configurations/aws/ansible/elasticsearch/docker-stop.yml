@@ -1,0 +1,5 @@
+---
+- hosts: elasticsearch-*
+  become: true
+  roles:
+    - docker-stop-_PRIVATEIP_

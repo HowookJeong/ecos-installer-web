@@ -1,0 +1,14 @@
+version: "3.7"
+
+services:
+  kibana-_PRIVATEIP_:
+    image: docker.elastic.co/kibana/kibana:_VERSION_
+    container_name: kibana
+    environment:
+      ELASTICSEARCH_HOSTS: _ELASTICSEARCHHOSTS_
+    ports:
+      - _KIBANAPORT_:5601
+    expose:
+      - 5601
+    restart: on-failure
+    network_mode: bridge

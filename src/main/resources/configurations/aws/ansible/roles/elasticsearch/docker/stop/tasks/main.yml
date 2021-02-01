@@ -1,0 +1,5 @@
+---
+- name: Run docker-compose down
+  docker_compose:
+    project_src: /home/mzc/apps/elastic/elasticsearch
+    state: absent

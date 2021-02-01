@@ -1,0 +1,44 @@
+version: '3.7'
+
+services:
+  ecos-installer-web:
+    container_name: ecos-installer-web
+    image: ecos-installer-web:${TAG}
+    build:
+      context: .
+      args:
+        - BASTION_IP=${BASTION_IP}
+    environment:
+      - TZ="Asia/Seoul"
+      - serverPort=${SERVER_PORT}
+      - env=${ENV}
+      - redirecthttps=${REDIRECT_HTTPS}
+      - configWorkingPath=/tmp/home/mzc/app
+      - configTerraformAwsBastionIp=${BASTION_IP}
+      - configTerraformAwsSecurityGroup=sg-xxxxxxxxxxxxxxxx
+      - configTerraformAwsAz=ap-northeast-2a
+      - configTerraformAwsAmi=ami-061b0ee20654981ab
+      - configTerraformAwsSubnet=subnet-xxxxxxxxxxxxxxxx
+      - configTerraformAwsKeyName=ec2key-gw
+      - configTerraformAwsPemFile=ec2key-gw.pem
+      - configTerraformAwsPathElasticsearch=/tmp/home/mzc/app/terraform/_CLUSTERNAME_
+      - configTerraformAwsPathKibana=/tmp/home/mzc/app/terraform/_CLUSTERNAME_/kibana
+      - configTerraformAwsBackendBucket=megatoi-terraform-state
+      - configTerraformAwsBackendKeyElasticsearch=_CLUSTERNAME_/terraform.tfstate
+      - configTerraformAwsBackendKeyKibana=_CLUSTERNAME_/kibana/terraform.tfstate
+    ports:
+      - 8080:${SERVER_PORT}
+    volumes:
+      - /Users/mzc02-henryjeong/.aws:/root/.aws
+      - /Users/mzc02-henryjeong/.ssh:/root/.ssh
+      - /Users/mzc02-henryjeong/Temp/logs:/home/mzc/logs
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /Users/mzc02-henryjeong/Works/app/terraform:/home/mzc/backup/terraform
+    sysctls:
+      - net.core.somaxconn=65000
+    healthcheck:
+      test: ["CMD-SHELL", "curl --silent --fail localhost:35100/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
+    restart: always

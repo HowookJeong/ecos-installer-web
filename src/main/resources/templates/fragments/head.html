@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head th:fragment="mainHead">
+  <meta charset="utf-8"/>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
+  <meta name="description" content=""/>
+  <meta name="author" content=""/>
+  <meta id="_csrf" name="_csrf" th:content="${_csrf.token}" />
+  <meta id="_csrf_header" name="_csrf_header" th:content="${_csrf.headerName}" />
+  <th:block layout:fragment="html_head"></th:block>
+
+  <link rel="shortcut icon" type="image/x-icon" href="/statics/images/favicon.ico" />
+  <link href="/statics/css/custom-icon.css" rel="stylesheet" />
+  <link href="/statics/css/common.css" rel="stylesheet" />
+  <link href="/statics/css/sidebar.css" rel="stylesheet" />
+  <link href="/statics/css/styles.css" rel="stylesheet" />
+  <link href="/statics/css/vendor/dataTables.bootstrap4.min.css" rel="stylesheet" />
+  <link href="/statics/css/vendor/fontawesome-free-5.13.0-web/css/all.css" rel="stylesheet" />
+  <link href="/statics/css/bootstrap4-toggle.css" rel="stylesheet">
+
+  <th:block layout:fragment="custom_css"></th:block>
+  <title>ECOS</title>
+</head>
+</html>

@@ -1,0 +1,101 @@
+<html xmlns:th="http://www.thymeleaf.org">
+<nav class="sb-topnav navbar navbar-expand navbar-dark bg-dark" th:fragment="navBarFragment">
+  <a class="navbar-brand" href="/">ECOS</a>
+  <button class="btn btn-sm btn-link order-1 order-lg-0" id="sidebarToggle" href="#"><i
+      class="fas fa-bars"></i></button>
+  <!-- Navbar-->
+  <ul class="navbar-nav ml-auto ml-md pull-right">
+    <li class="nav-item dropdown">
+      <a class="nav-link dropdown-toggle" id="localeDropdown" href="#" role="button"
+         data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+      </a>
+    </li>
+  </ul>
+</nav>
+
+<div id="layoutSidenav" th:fragment="sideNavFragment">
+  <!-- Sidebar -->
+  <div id="layoutSidenav_nav">
+    <nav class="sb-sidenav accordion sb-sidenav-dark sidebar" id="sidenavAccordion">
+      <ul class="list-unstyled menu-elements">
+<!--        <li>-->
+<!--          <a href="#dashboardSections" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle" role="button" aria-controls="dashboardSections">-->
+<!--            <i class="fas fa-tachometer-alt"></i> [[#{MENU_DASHBOARD}]]-->
+<!--          </a>-->
+<!--          <ul class="collapse list-unstyled" id="dashboardSections">-->
+<!--            <li>-->
+<!--              <a class="scroll-link" href="/dashboard/iot">[[#{MENU_DASHBOARD_IOT}]]</a>-->
+<!--            </li>-->
+<!--            <li>-->
+<!--              <a class="scroll-link" href="/dashboard/resources">[[#{MENU_DASHBOARD_RESOURCES}]]</a>-->
+<!--            </li>-->
+<!--          </ul>-->
+<!--        </li>-->
+
+        <li>
+          <a class="scroll-link" href="/"><i class="fas fa-laptop"></i> HOME</a>
+        </li>
+
+        <li>
+          <a href="#elasticStackSections" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle" role="button" aria-controls="elasticStackSections">
+            <i class="fas fa-space-shuttle"></i> Elastic Stack
+          </a>
+          <ul class="collapse list-unstyled" id="elasticStackSections">
+            <li>
+              <a class="scroll-link" href="/starter/elasticsearch">Elasticsearch</a>
+            </li>
+            <li>
+              <a class="scroll-link" href="/starter/kibana">Kibana</a>
+            </li>
+<!--            <li>-->
+<!--              <a class="scroll-link" href="/starter/logstash">Logstash</a>-->
+<!--            </li>-->
+<!--            <li>-->
+<!--              <a class="scroll-link" href="/starter/filebeat">Filebeat</a>-->
+<!--            </li>-->
+          </ul>
+        </li>
+
+        <li>
+          <a href="#managementSections" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle" role="button" aria-controls="managementSections">
+            <i class="fas fa-tools"></i> Management
+          </a>
+          <ul class="collapse list-unstyled" id="managementSections">
+            <li>
+              <a class="scroll-link" href="/management/elasticsearch">Elasticsearch</a>
+            </li>
+            <li>
+              <a class="scroll-link" href="/management/kibana">kibana</a>
+            </li>
+<!--            <li>-->
+<!--              <a class="scroll-link" href="/management/kibana">Kibana</a>-->
+<!--            </li>-->
+<!--            <li>-->
+<!--              <a class="scroll-link" href="/management/logstash">Logstash</a>-->
+<!--            </li>-->
+<!--            <li>-->
+<!--              <a class="scroll-link" href="/management/filebeat">Filebeat</a>-->
+<!--            </li>-->
+          </ul>
+        </li>
+
+      </ul>
+    </nav>
+  </div>
+  <!-- End sidebar -->
+</div>
+
+
+<footer class="py-4 bg-light mt-auto" th:fragment="footerFragment">
+  <div class="container-fluid">
+    <div class="d-flex align-items-center justify-content-between small">
+      <div class="text-muted">  Copyright © 2020 MEGAZONE CLOUD Corp. All rights reserved</div>
+      <div>
+        <a href="#">Privacy Policy</a>
+        &middot;
+        <a href="#">Terms &amp; Conditions</a>
+      </div>
+    </div>
+  </div>
+</footer>
+</html>

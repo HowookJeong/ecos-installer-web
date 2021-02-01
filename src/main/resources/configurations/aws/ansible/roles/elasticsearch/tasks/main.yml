@@ -1,0 +1,79 @@
+---
+#- name: Wait for automatic system updates
+#  become: true
+#  shell: while sudo fuser /var/lib/dpkg/lock >/dev/null 2>&1; do sleep 1; done;
+
+#- name: Apt for sure
+#  apt: name=build-essential state=present
+#  register: apt_status
+#  until: apt_status is success
+#  delay: 30
+#  retries: 10
+
+- name: install docker
+  apt:
+    name: docker.io
+    state: latest
+    update_cache: true
+
+- name: install python 3
+  apt:
+    name: python3
+    state: latest
+    update_cache: true
+
+- name: install python pip3
+  apt:
+    name: python3-pip
+    state: latest
+    update_cache: true
+
+- name: install docker-compose
+  pip:
+    name: docker-compose
+    state: latest
+
+- name: Run a script with arguments
+  script: _INITSCRIPT_
+
+#- name: user add docker group
+#  user:
+#    name: ubuntu
+#    groups: docker
+#    append: yes
+#
+#- name: user add docker group
+#  user:
+#    name: mzc
+#    groups: docker
+#    append: yes
+
+- name: elasticsearch data path permission allows
+  file:
+    path: _VOLUMESELASTICSEARCHDATA_
+    mode: '0777'
+    recurse: yes
+
+- name: elasticsearch logs path permission allows
+  file:
+    path: _VOLUMESELASTICSEARCHLOGS_
+    mode: '0777'
+    recurse: yes
+
+- name: Copy docker-compose.yml per node
+  copy:
+    src: _DOCKERCOMPOSESRC_
+    dest: _DOCKERCOMPOSEDEST_
+    owner: mzc
+    group: mzc
+    mode: '0644'
+
+- name: docker.sock permission allows
+  file:
+    path: /var/run/docker.sock
+    mode: '0666'
+
+- name: set vm.max_map_count
+  become: yes
+  become_method: sudo
+  shell: sysctl -w vm.max_map_count=262144

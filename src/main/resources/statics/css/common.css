@@ -1,0 +1,93 @@
+.error-page {
+  position: absolute;
+  top: 50%; left: 48.5%;
+  transform: translateY(-50%);
+  /*width: 100%;*/
+  text-align: center;
+  -webkit-transform: translateY(-50%);
+}
+
+.error-page strong {
+  display: block;
+  font-size: 60px;
+  margin-bottom:20px
+}
+
+.error-page p {
+  margin-bottom: 5px;
+  font-size: 20px;
+  color: #000000;
+}
+
+.error-page p:nth-of-type(2) {
+  font-size: 16px;
+  color: #5a6268;
+}
+
+.error-page button {
+  margin-top:20px
+}
+
+.clickable-row {
+  cursor: pointer;
+}
+
+code {
+  display: block;
+  white-space: pre-wrap
+}
+
+.spinner-background {
+  width:100%;
+  height:100%;
+  top:0;
+  margin: 0;
+  background: rgba(0, 0, 0, 0.2);
+  display:block;
+  position: fixed;
+  z-index:10000;
+}
+
+/* Spinner */
+.spinner {
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  z-index: 420;
+  width: 30px;
+  height: 30px;
+  margin: -10px 0 0 -10px;
+  border: 3px solid #eee;
+  border-radius: 100%;
+  animation: spinner 0.7s infinite linear
+}
+
+.spinner.show {
+  display: block
+}
+
+.spinner span {
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  border: 3px solid #bebebe;
+  border-top: 3px solid #fff;
+  top: -3px;
+  left: -3px;
+  border-radius: 100%
+}
+
+@keyframes spinner {
+  0% {
+    transform: rotate(0deg)
+  }
+
+  100% {
+    transform: rotate(360deg)
+  }
+}
+
+.close:focus {
+  outline: none;
+}
